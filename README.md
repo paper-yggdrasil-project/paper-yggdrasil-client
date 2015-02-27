@@ -1,2 +1,2 @@
-# mendeley-atom-shell
-this is atom-shell application with mendeley cloud data.
+# Wiki
+https://github.com/sosuke-k/paper-tree-client/wiki
