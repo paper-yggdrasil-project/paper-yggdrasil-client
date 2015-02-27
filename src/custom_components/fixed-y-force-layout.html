@@ -1,0 +1,447 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<!-- <script src="../vendor/d3.js" charset="utf-8"></script> -->
+<script type="text/javascript" src="../bower_components/d3/d3.js"></script>
+<script type="text/javascript" src="../bower_components/d3-tip/index.js"></script>
+
+<polymer-element name="fixed-y-force-layout">
+	
+  <template>
+    <style>
+      :host {
+        -webkit-user-select: none;
+      };
+      .node.no-active {
+        opacity: 0.1;
+      }
+      .node circle{
+        stroke: #eee;
+        stroke-width: 1.5px;
+      }
+      .link {
+        stroke: #999;
+        stroke-width: 5;
+        stroke-opacity: .6;
+      }
+      .link.no-active {
+        opacity: 0.1;
+      }
+      .node text {
+        font: 15px helvetica;
+      }
+      d3-tip {
+        line-height: 1;
+        color: black;
+      }
+      #info {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        text-align: right;
+        color: #546E7A;
+      }
+    </style>
+    <svg id="mysvg" width="{{width}}" height="{{height}}"></svg>
+    <div id="info">
+      Nodes : {{nodes.length}}　　Links : {{links.length}}　
+    </div>
+  </template>
+  <script>
+    Polymer("fixed-y-force-layout", {
+      tip: null,
+      width: 1280,
+      height: 1000,
+      margin: 50,
+      minYear: 1995,
+      maxYear: 2015,
+      stage: null,
+      force: null,
+      
+      handing: false,
+      handedNode: null,
+      handedLink: null,
+
+      publish: {
+        nodes: [],
+        links: [],
+        selectedNode: null,
+        selectedLink: null,
+      },
+      observe: {
+        "nodes" : "nodesChanged",
+        "nodesAdded" : "nodesAddedChanged",
+        "links" : "linksChanged",
+        // "selectedNode" : "selectedNodeChanged",
+      },
+      ready: function() {
+        console.log("document-graph ready");
+        init(this);
+        update(this);
+      },
+      nodesChanged: function() {
+        console.log('nodesChanged');
+        update(this);
+      },
+      nodesAddedChanged: function(oldValue, newValue) {
+        var addArray = [];
+        if (Array.isArray(newValue)) {
+          addArray = newValue;
+        } else {
+          addArray.push(newValue);
+        }
+        // Array.prototype.push.apply(a, b)において a, b はどちらも配列でなければ。(applyの第２引数は[args])
+        Array.prototype.push.apply(this.nodes,addArray);
+        update(this);
+      },
+      linksChanged: function(oldValue, newValue) {
+        console.log("linksChanged");
+        update(this);
+      },
+
+      selectedNodeChanged: function(oldValue, newValue) {
+        console.log("selectedNodeChanged in graph");
+        select(this, newValue, "node");
+      },
+      selectedLinkChanged: function(oldValue, newValue) {
+        console.log("selectedLinkChanged in graph");
+        select(this, newValue, "link");
+      },
+
+      deleteNode: function(nodeIdx) {
+        console.log("delete node(index is " + nodeIdx + ")");
+        this.nodes.splice(nodeIdx,1);
+        update(this);
+      }
+    });
+
+    function init(el) {
+      el.stage = d3.select(el.$.mysvg);
+      el.$.mysvg.attributes["width"] = window.innerWidth - 2 * 240;
+      el.width = window.innerWidth - 2 * 240;
+
+      try {
+        el.tip = d3.tip()
+          .attr('class', 'd3-tip')
+          .offset([-10, 0])
+          .html(function (d) {
+            return  d.title;
+          });
+        el.stage.call(el.tip);
+      } catch(e) {
+        console.log(e);
+      }
+
+      var color1 = "#eceff1";
+      var color2 = "#cfd8dc";
+
+      el.stage.append("rect")
+        .attr("width", el.width)
+        .attr("height", el.height)
+        .style("fill", color1);
+
+      var years = el.maxYear - el.minYear;
+      var rectHeight = (el.height - el.margin * 2) / years;
+      for(var i = 0; i < years; i++) {
+        var color = color1
+        if (i % 2 == 1) color = color2;
+        el.stage.append("rect")
+          .attr("width", el.width)
+          .attr("height", rectHeight)
+          .attr("y", rectHeight * i + el.margin - rectHeight / 2)
+          .style("fill", color);
+        el.stage.append("text")
+          .attr("x", 10)
+          .attr("y", rectHeight * i + el.margin)
+          .text(el.minYear + i + 1)
+          .style("fill", "gray");
+      }
+      
+      el.force = d3.layout.force()
+        .nodes(el.nodes)
+        .links(el.links)
+        .charge(-200)
+        .linkDistance(200)
+        .size([el.width, el.height]);
+
+    }
+    
+    function update(el) {
+      console.log("updating...");
+
+      var nodeGroup = el.stage.selectAll(".node")
+        // ひとまず自動付加のindexをキーに。
+        .data(el.nodes);
+
+      var nodeEnterGroup = nodeGroup.enter()
+        .append("g")
+        .attr("class", "node")
+        .on("mousedown", function(d) {
+          console.log('onmousedown');
+
+          if (event.altKey) {
+            el.handing = true;
+            el.handedNode = d3.select(this).on("mousedown.drag", null);
+            el.handedLink = el.stage.append("line")
+              .attr("class", "link handed")
+              .attr("x1", d.px)
+              .attr("y1", yByYear(d))
+              .attr("x2", d3.mouse(this)[0])
+              .attr("y2", d3.mouse(this)[1]);
+          } else {
+            console.log("event.altKey = " + event.altKey);
+          }
+        })
+        .on("mouseup", function(d) {
+          console.log("mouseup in node");
+          // ドラッグしながらノードの上にカーソル移動後、離しても発火しない
+        })
+        .on("click", function(d) {
+          console.log("click in node");
+
+          if (el.stage.selectAll(".node.active").data().filter(function(n) {
+            return n.index == d.index;
+          }).length > 0 ) {
+            unselect(el);
+          } else {
+            el.selectedNode = d;
+          }
+
+        })
+        .on("dblclick", function(d) {
+          console.log("dblclick");
+
+          var links = el.stage.selectAll(".link").data();
+          console.log("links.length = " + links.length);
+          var refNode = links.filter(function(l) {
+            return l.source.index == d.index;
+          });
+          var refferedNodes = [];
+          for (var i = 0; i < refNode.length; i++) {
+            var refferedNode = {};
+            // bibtex の形に整形
+            refferedNode.title = refNode[i].target.title;
+            refferedNodes.push(refferedNode);
+          }
+          console.log(JSON.stringify(refferedNodes));
+          
+        })
+        .call(el.force.drag);
+
+      if (el.tip != null) {
+        nodeEnterGroup.on('mouseover', el.tip.show)
+                      .on('mouseout', el.tip.hide);
+      }
+
+      var node = nodeEnterGroup.append("circle")
+        .attr("r", 10)
+        .style("fill", groupColor);
+
+      var title = nodeEnterGroup.append("text")
+        .attr("dx", 10)
+        .attr("dy", ".35em")
+        // .text(function(d) { return d.year; })
+        .style("stroke", "gray");
+
+      nodeGroup.exit().remove();
+
+      
+      var link = el.stage.selectAll(".link")
+        .data(el.links, function(l) {
+          // ひとまず自動付加のindexとindexの組をキーに。
+          var sourceIndex = (typeof(l.source) == "object") ? l.source.index : l.source;
+          var targetIndex = (typeof(l.target) == "object") ? l.target.index : l.target;
+          var key = sourceIndex + "-" + targetIndex;
+          return key;
+        });
+
+      link.enter()
+        .append("line")
+        .attr("class", "link")
+        .style("marker-end",  "url(#suit)")
+        .on("click", function(d) {
+          console.log("click in link");
+
+          if (el.stage.selectAll(".link.active").data().filter(function(l) {
+            var sourceSame = l.source.index == d.source.index ? true : false;
+            var targetSame = l.target.index == d.target.index ? true : false;
+            return sourceSame && targetSame;
+          }).length > 0 ) {
+            unselect(el);
+          } else {
+            el.selectedLink = d;
+          }
+        }); 
+
+      link.exit().remove();
+
+      el.stage.append("defs").selectAll("marker")
+          .data(["suit", "licensing", "resolved"])
+        .enter().append("marker")
+          .attr("id", function(d) { return d; })
+          .attr("viewBox", "0 -5 10 10")
+          .attr("refX", 25)
+          .attr("refY", 0)
+          .attr("markerWidth", 2)
+          .attr("markerHeight", 6)
+          .attr("orient", "auto")
+        .append("path")
+          .attr("d", "M0,-5L10,0L0,5 L10,0 L0, -5")
+          .style("stroke", "#4679BD")
+          .style("stroke-width", 4)
+          .style("opacity", "0.6");
+
+
+      
+
+      function yByYear(d) {
+        if (typeof(d.year) !== "undefined") {
+          if (d.year <= el.minYear) {
+            return el.margin;
+          } else {
+            return (d.year - el.minYear) / (el.maxYear - el.minYear) * (el.height - 2 * el.margin);
+          }
+        } else {
+          return el.height - el.margin;
+        }
+      }
+      
+      el.force.on("tick", function() {
+        
+        link.attr("x1", function(d) { return d.source.x; })
+          .attr("y1", function(d) { return yByYear(d.source); })
+          .attr("x2", function(d) { return d.target.x; })
+          .attr("y2", function(d) { return yByYear(d.target); });
+
+        var nodeCircle = el.stage.selectAll(".node circle");
+        nodeCircle.attr("cx", function(d) { return d.x; })
+                  .attr("cy", yByYear)
+                  .style("fill", groupColor);
+
+        var nodeTitle = el.stage.selectAll(".node text");
+        nodeTitle.attr("x", function(d) { return d.x })
+                  .attr("y", yByYear);
+      });
+
+      el.stage.on("mousemove", function() {
+        if (el.handing) {
+          if (el.handedLink != null) {
+            el.handedLink.attr("x1", el.handedNode.data()[0].px)
+              .attr("y1", yByYear(el.handedNode.data()[0]))
+              .attr("x2", d3.mouse(this)[0])
+              .attr("y2", d3.mouse(this)[1]);
+          }
+        }
+      });
+
+      el.stage.on("mouseup", function() {
+        console.log('mouseup in svg');
+        console.log("event.altKey = " + event.altKey);
+        if(el.handing) {
+          el.handing = false;
+
+          var handedLink = el.stage.selectAll(".link.handed");
+          handedLink.remove();
+
+          el.stage.selectAll(".node").call(el.force.drag);
+
+          var mouseP = d3.mouse(this);
+          var nodeData = el.stage.selectAll(".node circle").data();
+          var handedNode = el.handedNode.data()[0];
+
+          var nearestIndex = handedNode.index;
+          var nearestDistance = Math.sqrt(el.width * el.width + el.height * el.height);
+
+          for (var i = 0; i < nodeData.length; i++) {
+            var x1 = nodeData[i].x;
+            var y1 = yByYear(nodeData[i]);
+            var x2 = mouseP[0];
+            var y2 = mouseP[1];
+            var distance = Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+
+            // ノードを削除する機能追加時に以下の条件式も要変更
+            if (nearestDistance > distance && i != handedNode.index) {
+              nearestDistance = distance;
+              nearestIndex = nodeData[i].index;
+            }
+          }
+
+          el.links.push({ source: handedNode.index, target: nearestIndex });
+        }
+      });
+
+      // addEventListener("resize", function() {
+      //   console.log("resize");
+      //   init(el);
+      //   update(el);
+      // });
+
+      el.force.start();
+
+    }//end update
+
+    function groupColor(n) {
+      var group = n.group;
+      var color = "rgb(55, 71, 79)";
+      switch(group) {
+        case 1:
+          color = "blue";
+          break;
+        case 2:
+          color = "green";
+          break;
+        case 3:
+          color = "yellow";
+          break;
+        case 4:
+          color = "red";
+          break;
+      }
+      return color;
+    }
+
+    function select(el, item, type) {
+      console.log("select function (type:" + type + ")");
+
+      if (type == "node") {
+        
+        el.stage.selectAll(".node")
+          .classed("active", function(n) {
+            return n.index == item.index;
+          })
+          .style("opacity", function(n) {
+            return n.index == item.index ? 1.0 : 0.3;
+          });
+        el.stage.selectAll(".link")
+          .classed("active", false)
+          .style("opacity", 0.3);
+
+      } else if (type == "link") {
+        el.stage.selectAll(".node")
+          .classed("active", false)
+          .style("opacity", 0.3);
+
+        el.stage.selectAll(".link")
+          .classed("active", function(l) {
+            var sourceSame = item.source.index == l.source.index ? true : false;
+            var targetSame = item.target.index == l.target.index ? true : false;
+            return sourceSame && targetSame;
+          })
+          .style("opacity", function(l) {
+            var sourceSame = item.source.index == l.source.index ? true : false;
+            var targetSame = item.target.index == l.target.index ? true : false;
+            return sourceSame && targetSame ? 1.0 : 0.3;
+          });
+      }
+
+    }// end select
+
+    function unselect(el) {
+      el.stage.selectAll(".node")
+        .classed("active", false)
+        .style("opacity", 1.0);
+      el.stage.selectAll(".link")
+        .classed("active", false)
+        .style("opacity", 1.0);
+    }// end unselect
+
+  </script>
+</polymer-element>

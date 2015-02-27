@@ -1,0 +1,211 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-autogrow-textarea.html">
+<link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
+<link rel="import" href="../bower_components/core-pages/core-pages.html">
+<link rel="import" href="../bower_components/core-selector/core-selector.html">
+<link rel="import" href="../bower_components/paper-slider/paper-slider.html">
+
+<polymer-element name="info-view">
+  <template fullbleed layout vertical>
+    <style>
+      :host {
+        display: block;
+        width: 100%;
+        /*background-color: #eceff1;*/
+        font-family: RobotoDraft, 'Helvetica Neue', Helvetica, Arial;
+        font-size: 14px;
+        margin: 0;
+        /*padding: 24px;*/
+        -webkit-tap-highlight-color: rgba(0,0,0,0);
+        -webkit-touch-callout: none;
+      }
+      #container {
+        padding: 24px;
+      }
+      section {
+        padding: 20px 0;
+      }
+      section > div {
+        padding: 14px;
+        font-size: 16px;
+      }
+
+      paper-button.core-selected {
+        background-color: #FFFF8D;/*A100(yellow)*/
+      }
+
+      paper-input {
+        width: 100%;
+      }
+      paper-input-decorator {
+        max-width: 100%;
+      }
+
+      .custom /deep/ ::-webkit-input-placeholder {
+        color: yellow;
+      }
+
+      .custom /deep/ .label-text,
+      .custom /deep/ .error {
+        color: yellow;
+      }
+      .custom /deep/ .unfocused-underline {
+        background-color: yellow;
+      }
+
+      .custom[focused] /deep/ .floated-label .label-text {
+        color: green;
+      }
+      .custom /deep/ .focused-underline {
+        background-color: green;
+      }
+
+      .custom {
+        color: #37474F; /*800(bluegray)*/
+      }
+
+      paper-slider::shadow #sliderBar::shadow #activeProgress {
+        background-color: {{sliderColor}};
+      }
+      paper-slider::shadow #sliderKnobInner {
+        background-color: {{sliderColor}};
+      }
+      paper-slider::shadow #sliderKnobInner::before {
+        background-color: {{sliderColor}};
+      }
+    </style>
+
+    <div id="container">
+
+      <core-selector target="{{$.infoLabel}}" itemsSelector="paper-button" selected="{{selectedType}}" notap>
+        <div id="infoLabel" horizontal layout>
+          <paper-button flex name="node">node</paper-button>
+          <paper-button flex name="link">link</paper-button>
+        </div>
+      </core-selector>
+
+      <core-pages selected="{{selectedType}}">
+        <section name="node">
+
+          <paper-slider id="slider" snaps pin min="0" max="4" value="{{viewedNode.group}}" on-core-change="{{sliderValueChanged}}"></paper-slider>
+
+          <paper-input-decorator label="Title" class="custom" floatingLabel>
+            <input is="core-input" value="{{viewedNode.title}}">
+          </paper-input-decorator>
+
+          <paper-input-decorator label="Authors" class="custom" floatingLabel>
+            <paper-autogrow-textarea>
+              <textarea value="{{viewedNode.authors}}"></textarea>
+            </paper-autogrow-textarea>
+          </paper-input-decorator>
+
+          <paper-input-decorator label="Journal" class="custom" floatingLabel>
+            <input is="core-input" required value="{{viewedNode.journal}}">
+          </paper-input-decorator>
+
+          <paper-input-decorator label="Year" class="custom" floatingLabel>
+            <input is="core-input" required value="{{viewedNode.year}}">
+          </paper-input-decorator>
+
+          <paper-input-decorator label="Abstarct" class="custom" floatingLabel>
+            <paper-autogrow-textarea>
+              <textarea value="{{viewedNode.abstract}}"></textarea>
+            </paper-autogrow-textarea>
+          </paper-input-decorator>
+
+          <paper-input-decorator label="URL" class="custom" floatingLabel>
+            <input is="core-input" required value="{{viewedNode.url}}">
+          </paper-input-decorator>
+
+          <br><br>
+
+          <paper-input-decorator label="MEMO" class="custom" floatingLabel>
+            <paper-autogrow-textarea>
+              <textarea value="{{viewedNode.memo}}"></textarea>
+            </paper-autogrow-textarea>
+          </paper-input-decorator>
+
+        </section>
+
+        <section name="link">
+
+          <paper-input-decorator label="Source Year" class="custom" floatingLabel>
+            <input is="core-input" value="{{viewedLink.source.year}}">
+          </paper-input-decorator>
+
+          <paper-input-decorator label="Source Title" class="custom" floatingLabel>
+            <input is="core-input" value="{{viewedLink.source.title}}">
+          </paper-input-decorator>
+
+          <div horizontal center-justified layout>↓</div>
+
+          <paper-input-decorator label="Target Year" class="custom" floatingLabel>
+            <input is="core-input" value="{{viewedLink.target.year}}">
+          </paper-input-decorator>
+
+          <paper-input-decorator label="Target Title" class="custom" floatingLabel>
+            <input is="core-input" value="{{viewedLink.target.title}}">
+          </paper-input-decorator>
+
+          <br><br>
+
+          <paper-input-decorator label="MEMO" class="custom" floatingLabel>
+            <paper-autogrow-textarea>
+              <textarea value="{{viewedLink.memo}}"></textarea>
+            </paper-autogrow-textarea>
+          </paper-input-decorator>
+
+        </section>
+      <core-pages>
+    </div>
+    
+  </template>
+  <script>
+    Polymer("info-view", {
+
+      // sliderDefaultColor: "rgb(55, 71, 79)",
+
+      colors: [
+        "rgb(55, 71, 79)",
+        "blue",
+        "green",
+        "yellow",
+        "red",
+      ],
+
+      ready: function() {
+        this.selectedType = "node";
+        this.sliderColor = this.colors[0];
+      },
+
+      publish: {
+        selectedItem: {
+          type: "",
+          data: null,
+        },
+      },
+
+      observe: {
+        selectedItem: "selectedItemChanged",
+      },
+
+      selectedItemChanged: function() {
+        console.log("selectedItemChanged of info-view");
+        this.selectedType = this.selectedItem.type;
+        
+        if (this.selectedItem.type == "node") {
+          this.viewedNode = this.selectedItem.data;
+        } else if (this.selectedItem.type == "link") {
+          this.viewedLink = this.selectedItem.data;
+        }
+      },
+
+      sliderValueChanged: function(oldValue, newValue) {
+        console.log(this.$.slider.value);
+        this.sliderColor = this.colors[this.$.slider.value];
+      },
+
+    });
+  </script>
+</polymer-element>

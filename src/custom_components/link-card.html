@@ -1,0 +1,71 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+
+<polymer-element name="link-card">
+  <template>
+    <style>
+    :host {
+      display: block;
+      width: 100%;
+    }
+    #container {
+      position: relative;
+      padding-top: 24px;
+    }
+    paper-icon-button {
+      position: absolute;
+      top:0px;
+      right: -20px;
+      display: none;
+      border: 2px solid #78909C;
+      border-radius: 24px;
+    }
+    #container:hover paper-icon-button {
+      display: block;
+    }
+    #yearContainer {
+      position: absolute;
+      top: 10px;
+      width: 100%;
+      font-size: 12px;
+    }
+    .radius {
+      padding-left: 9px;
+      padding-right: 9px;
+      border: 2px solid #78909C;
+      border-radius: 12px;
+    }
+    #content {
+      padding: 18px;
+      border: 2px dotted #78909C;
+    }
+
+    </style>
+    <div id="container">
+      <paper-icon-button icon="close" on-tap="{{deleteLink}}"></paper-icon-button>
+      <div id="yearContainer">
+        <div horizontal center-justified layout>
+          <span class="radius"><content select="year"></content></span>
+        </div>
+      </div>
+      <div id="content" vertical layout>
+        <div><content select="refering-title"></div>
+        <div horizontal center-justified layout>↓</div>
+        <div><content select="refered-title"></div>
+      </div>
+    </div>
+  </template>
+  <script>
+    Polymer("link-card", {
+
+      publish: {
+        data: null,
+      },
+
+      deleteLink: function() {
+        this.fire("delete-link", this.data);
+      }
+
+    });
+  </script>
+</polymer-element>

@@ -1,0 +1,72 @@
+<link rel="import" href="../bower_components/core-transition/core-transition-css.html">
+<link rel="import" href="../bower_components/core-overlay/core-overlay.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
+
+
+<polymer-element name="input-dialog">
+	<template>
+		<style>
+			:host {
+				box-sizing: border-box;
+				-moz-box-sizing: border-box;
+				width: 500px;
+				font-family: Arial, Helvetica, sans-serif;
+				font-size: 13px;
+				-webkit-user-select: none;
+				-moz-user-select: none;
+				overflow: hidden;
+				background: #607D8B; /*500(bluegray)*/
+				padding:20px 4px 16px 32px;
+				outline: 1px solid rgba(0,0,0,0.2);
+				box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+			}
+      paper-icon-button {
+        color: white;
+        padding: 18px;
+      }
+      paper-input-decorator {
+        color: white;
+      }
+      paper-input-decorator /deep/ ::-webkit-input-placeholder {
+        color: white;
+      }
+      paper-input-decorator[focused] /deep/ .floated-label .label-text {
+        color: #FFFF8D; /*A100(yellow)*/
+      }
+      paper-input-decorator /deep/ .focused-underline {
+        background-color: #FFFF8D; /*A100(yellow)*/
+      }
+    </style>
+    <core-overlay id="overlay" layered backdrop transition="core-transition-center"></core-overlay>
+    <div horizontal layout>
+      <paper-input-decorator flex label="Input Project Name" class="custom" floatingLabel>
+        <input is="core-input" value="{{inputValue}}">
+      </paper-input-decorator>
+      <paper-icon-button icon="add" on-tap="{{tapDialogButton}}" />
+    </div>
+	</template>
+	<script>
+
+	Polymer('input-dialog', {
+
+    inputValue: "",
+	
+		ready: function() {
+			this.$.overlay.target = this;
+		},
+
+		toggle: function() {
+			this.$.overlay.toggle();
+		},
+
+    tapDialogButton: function() {
+      if (this.inputValue != "") {
+        this.fire("add-project", this.inputValue);
+      }
+    }
+
+	});
+
+	</script>
+</polymer-element>

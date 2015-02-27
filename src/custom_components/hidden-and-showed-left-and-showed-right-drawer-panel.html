@@ -1,0 +1,130 @@
+<link rel="import" href="../bower_components/core-toolbar/core-toolbar.html">
+<link rel="import" href="../bower_components/core-header-panel/core-header-panel.html">
+<link rel="import" href="../bower_components/core-drawer-panel/core-drawer-panel.html">
+
+<polymer-element name="hidden-and-showed-left-and-showed-right-drawer-panel">
+
+  <template>
+    <style>    
+      :host {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+      }
+      #main_header_panel {
+        width: 100%;
+        height: 100%;
+        left: 0px;
+        top: 0px;
+        position: absolute;
+      }
+      .header-panel-main {
+        height: 100%;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        background: linear-gradient(rgb(207, 216, 220), rgb(176, 190, 197));
+        /*background: linear-gradient(#fff, #000;*/
+      }
+      core_drawer_panel {
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        bottom: 0px;
+        left: 0px;
+        width: 100%;
+        height: 100%;
+      }
+      .drawer-panel-drawer {
+        box-shadow: rgba(0, 0, 0, 0.0980392) 0px 2px 4px, rgba(0, 0, 0, 0.0980392) 0px 0px 3px;
+        overflow-y: scroll;
+      }
+      .drawer-panel-main {
+        height: 100%;
+        box-sizing: border-box;
+      }
+
+      #hidden_header_panel {
+        width: 100%;
+        height: 100%;
+        left: 0px;
+        top: 0px;
+        position: absolute;
+      }
+    </style>
+    <core-header-panel mode="standard" id="main_header_panel">
+
+      <core-toolbar id="core_toolbar">
+        <content select="[tool]"></content>
+      </core-toolbar>
+
+      <section class="header-panel-main">
+        <core-drawer-panel transition drawerwidth="{{hiddenLeftDrawerWidth}}" responsivewidth="0px" touch-action>
+
+          <section id="hidden-left-drawer" class="drawer-panel-drawer" vertical layout drawer>
+            <core-header-panel mode="scroll" id="hidden_header_panel">
+              <core-toolbar>
+                <content select="[hiddenTool]"></content>
+              </core-toolbar>
+              <section><content select="[hidden-left-drawer]"></content></section>
+            </core-header-panel>
+          </section>
+
+          <section class="drawer-panel-main" main>
+            <core-drawer-panel transition drawerwidth="{{leftDrawerWidth}}" responsivewidth="0px" touch-action>
+
+              <section class="drawer-panel-drawer" drawer>
+                <content select="[left-drawer]"></content>
+              </section>
+
+              <section class="drawer-panel-main" main>
+                <core-drawer-panel transition drawerwidth="{{rightDrawerWidth}}" responsivewidth="0px" selected="main" rightdrawer touch-action>
+
+                  <section class="drawer-panel-drawer" drawer>
+                    <content select="[right-drawer]"></content>
+                  </section>
+
+                  <section class="drawer-panel-main" main style="overflow: scroll;">
+                    <content select="[graph]"></content>
+                  </section>
+
+                </core-drawer-panel>
+              </section>
+
+            </core-drawer-panel>
+          </section>
+
+        </core-drawer-panel>
+      </section>
+
+    </core-header-panel>
+  </template>
+
+  <script>
+    Polymer("hidden-and-showed-left-and-showed-right-drawer-panel", {
+      defaultHiddenDrawerWidth: "0px",
+
+      publish: {
+        hiddenLeftDrawerWidth: "300px",
+        leftDrawerWidth: "300px",
+        rightDrawerWidth: "300px",
+      },
+
+      ready: function() {
+        this.defaultHiddenDrawerWidth = this.hiddenLeftDrawerWidth;
+        this.hiddenLeftDrawerWidth = "0px";
+      },
+      
+      togglePanel: function() {
+        if (this.hiddenLeftDrawerWidth == this.defaultHiddenDrawerWidth) {
+          this.hiddenLeftDrawerWidth = "0px";
+        } else {
+          this.hiddenLeftDrawerWidth = this.defaultHiddenDrawerWidth;
+        }
+      },
+    });
+  </script>
+
+</polymer-element>

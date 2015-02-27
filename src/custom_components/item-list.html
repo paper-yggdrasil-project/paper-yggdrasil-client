@@ -1,0 +1,140 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="../custom_components/node-card.html">
+<link rel="import" href="../custom_components/link-card.html">
+
+<polymer-element name="item-list">
+  <template>
+    <style>
+    :host {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background-color: #eceff1;
+    }
+    #container {
+      padding: 24px;
+      padding-top: 0px;
+      overflow-y: scroll;
+      overflow-x: hidden;
+      background-color: #eceff1;
+    }
+    
+    core-selector /deep/ #content {
+      background-color: #CFD8DC;
+    }
+    core-selector .core-selected /deep/ #content {
+      background-color: #90A4AE;
+    }
+    core-selector span{
+      color: #455A64;
+    }
+    core-selector .core-selected span{
+      color: #263238;
+    }
+    core-selector :focus { outline: none; }
+
+    paper-button {
+      margin-top: 24px;
+      color: #455A64;
+      background-color: #CFD8DC;
+    }
+    paper-button:hover {
+      color: #ECEFF1;
+      background-color: #78909C;
+    }
+    </style>
+
+    <div id="container">
+
+      <core-selector id="selector" valueattr="data" on-keydown="{{onKeydown}}" on-core-select="{{onCoreSelect}}" layout vertical center>
+        <template repeat="{{item in items}}">
+          <template if="{{type == 'node'}}">
+            <node-card data="{{item}}" on-delete-node="{{deleteItem}}" tabindex="0">
+              <document-title><span>{{item.title}}</span></document-title>
+              <year><span>{{item.year}}</span></year>
+              <abstract>{{item.abstract}}</abstract>
+            </node-card>
+          </template>
+          <template if="{{type == 'link'}}">
+            <link-card data="{{item}}" on-delete-link="{{deleteItem}}" tabindex="0">
+              <year><span>{{item.source.year}} -> {{item.target.year}}</span></year>
+              <refering-title>{{item.source.title}}</refering-title>
+              <refered-title>{{item.target.title}}</refered-title>
+            </link-card>
+          </template>
+        </template>
+      </core-selector>
+
+      <template if="{{type == 'node'}}">
+        <div horizontal center-justified layout>
+          <paper-button on-tap="{{addNode}}">ADD NODE</paper-button>
+        </div>
+      </template>
+
+    </div>
+    
+  </template>
+  <script>
+    Polymer("item-list", {
+
+      ready: function() {
+        this.items = [];
+        console.log(this.type);
+        console.log(this.items);
+      },
+
+      publish: {
+        type: "",
+        items: [],
+        selectedItem: null,
+      },
+      observe: {
+        selectedItem: "selectedItemChanged",
+      },
+      onKeydown: function(e) {
+        console.log("key code is " + e.keyCode);
+        if (e.keyCode == 9) {
+          // when tab key
+          if (e.shiftKey) this.$.selector.selectPrevious();
+          else this.$.selector.selectNext();
+        } else if (e.keyCode == 13) {
+          // when enter key
+          console.log(this.$.selector.selectedItem.data);
+        }
+      },
+      //event listener when selected node is changed from EXTERNAL
+      selectedItemChanged: function(oldValue, newValue) {
+        if (newValue.type == this.type) {
+          this.$.selector.selected = newValue.data;
+        } else {
+          // this.$.selector.selected = null;
+        }
+      },
+      //event listener when selected node is changed from INTERNAL
+      onCoreSelect: function(e) {
+        console.log("onCoreSelect");
+        console.log("type = " + this.type);
+        this.selectedItem = {
+          type: this.type,
+          data: e.detail.item.data,
+        };
+      },
+
+      //when node is added, updating graph work on without fire
+      addNode: function(e) {
+        var node = {
+          title: "input title",
+          year: "2016",
+        };
+        Array.prototype.push.apply(this.items, [node]);
+        // this.fire("add-node", e.detail);
+      },
+      deleteItem: function(e) {
+        this.fire("delete-item", { type: this.type, data: e.detail });
+      },
+
+    });
+  </script>
+</polymer-element>

@@ -1,0 +1,373 @@
+<link rel="import" href="../bower_components/core-toolbar/core-toolbar.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/core-menu/core-menu.html">
+<link rel="import" href="../bower_components/core-localstorage/core-localstorage.html">
+<link rel="import" href="../bower_components/paper-dropdown/paper-dropdown.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="../bower_components/paper-input/paper-input-decorator.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../bower_components/paper-tabs/paper-tab.html">
+<link rel="import" href="../bower_components/core-pages/core-pages.html">
+
+<link rel="import" href="../custom_components/item-list.html">
+<link rel="import" href="../custom_components/hidden-and-showed-left-and-showed-right-drawer-panel.html">
+<link rel="import" href="../custom_components/fixed-y-force-layout.html">
+<link rel="import" href="../custom_components/info-view.html">
+<link rel="import" href="../custom_components/input-dialog.html">
+
+<style>
+  @font-face {
+    font-family: "Monterey";
+    src: url(../font/Monterey.ttf);
+  }
+</style>
+
+<polymer-element name="doc-graph-application">
+  <template>
+    <style>
+      .monterey {
+        font-family: 'Monterey';
+      }
+    </style>
+    <style>
+      :host {
+        width: 100%;
+        height: 100%;
+        background-color: #eceff1;
+      }
+      paper-toast {
+        bottom: 40px;
+        left: 10px;
+      }
+      .toolbar {
+        width: 100%;
+      }
+      #main-toolbar {
+        margin: 0px -16px;
+        color: rgba(255, 255, 255, 0.87);
+        background-color: #607d8b;
+      }
+      #main-toolbar input {
+        font-size: 0.65em;
+      }
+
+      .dropDownMenuAlt,
+      paper-dropdown-menu {
+        padding: 90px;
+        padding-right: 0px;
+      }
+      .dropDownMenuAlt,
+      paper-dropdown-menu::shadow #label,
+      paper-dropdown-menu::shadow #arrow {
+        color: rgba(255, 255, 255, 0.87);
+        font-size: 0.65em;
+      }
+      paper-dropdown::shadow #ripple,
+      paper-dropdown::shadow #background,
+      paper-dropdown::shadow #scroller {
+        color: #37474F;
+        background-color: #90A4AE;
+        left: 90px;
+        top: 90px;
+        width: 250px;
+      }
+      paper-dropdown::shadow #scroller {
+        overflow-y: scroll;
+        max-height: 500px;
+      }
+      paper-item.core-selected::shadow #ripple {
+        background-color: #B0BEC5;
+      }
+      paper-item.core-selected::shadow .button-content {
+        color: #455A64;
+      }
+    </style>
+    <paper-toast id="toast" text="default"></paper-toast>
+
+    <hidden-and-showed-left-and-showed-right-drawer-panel id="hiddenDrawerPanel" leftDrawerWidth="240px" rightDrawerWidth="240px">
+
+      <div tool class="toolbar">
+        <core-toolbar id="main-toolbar">
+          <div class="monterey">Paper Tree Project</div>
+          <core-localstorage id="storage" name="project-names" value="{{projectNames}}" on-core-localstorage-load="{{localStorageLoad}}"></core-localstorage>
+          <template if='{{projectNames.length == 0 || isUndefined(projectNames)}}'>
+            <span class="dropDownMenuAlt">Please add your project!</span>
+          </template>
+          <template if="{{showProjectList}}">
+            <paper-dropdown-menu label="Your Project">
+              <paper-dropdown id="dropdown" class="dropdown">
+                <core-menu id="projectList" class="menu" multi="false" valueattr="label" on-core-activate="{{projectActivated}}">
+                  <template repeat="{{name in projectNames}}">
+                    <paper-item class="projectItem" label="{{name}}">{{name}}</paper-item>
+                  </template>
+                </core-menu>
+              </paper-dropdown>
+            </paper-dropdown-menu>
+          </template>
+          <paper-icon-button icon="add" theme="core-light-theme" on-tap="{{showInputDialog}}"></paper-icon-button>
+          <template if="{{showProjectList}}">
+            <paper-icon-button icon="save" theme="core-light-theme" on-tap="{{saveProject}}"></paper-icon-button>
+          </template>
+          <div flex></div>
+          <paper-icon-button icon="search" theme="core-light-theme" on-tap="{{searchButton}}"></paper-icon-button>
+          <paper-input-decorator label="Search Papers">
+            <input id="query" is="core-input">
+          </paper-input-decorator>
+          <!-- <paper-icon-button icon="settings" theme="core-light-theme"></paper-icon-button> -->
+        </core-toolbar>
+      </div>
+
+      <div left-drawer>
+        <paper-tabs selected="{{selectedTab}}">
+          <paper-tab>Nodes</paper-tab>
+          <paper-tab>Links</paper-tab>
+        </paper-tabs>
+
+        <core-pages selected="{{selectedTab}}">
+          <item-list id="nodeList" type="node" items="{{nodes}}" on-delete-item="{{deleteItem}}" selectedItem="{{selectedItem}}"></item-list>
+          <item-list id="linkList" type="link" items="{{links}}" on-delete-item="{{deleteItem}}" selectedItem="{{selectedItem}}"></item-list>
+        </core-pages>
+      </div>
+
+      <fixed-y-force-layout graph id="graph" nodes="{{nodes}}" links="{{links}}" selectedNode="{{selectedNode}}" selectedLink="{{selectedLink}}"></fixed-y-force-layout>
+
+      <info-view right-drawer selectedItem="{{selectedItem}}"></info-view>
+
+    </hidden-and-showed-left-and-showed-right-drawer-panel>
+
+    <input-dialog id="dialog" on-add-project="{{addProject}}">
+    </input-dialog>
+
+  </template>
+  <script>
+
+    Polymer("doc-graph-application", {
+      showProjectList: true,
+      selectedTab: 0,
+      observe: {
+        "projectNames": "projectNamesChanged",
+        "selectedNode": "selectedNodeChanged",
+        "selectedLink": "selectedLinkChanged",
+        "selectedItem": "selectedItemChanged",
+      },
+      deleteItem: function(e) {
+        var type = e.detail.type;
+        var data = e.detail.data;
+        console.log("deleteItem(" + type + ") in application");
+        
+        switch(type) {
+          case "node":
+            var nodeIndex = data.index;
+            var nodesTmp1 = this.nodes.slice(0,nodeIndex);
+            var nodesTmp2 = this.nodes.slice(nodeIndex + 1, this.nodes.length);
+
+            var n = this.nodes.length;
+            Array.prototype.splice.call(this.nodes, 0, n);
+            this.$.graph.nodesChanged();
+
+            Array.prototype.push.apply(this.nodes, nodesTmp1);
+            Array.prototype.push.apply(this.nodes, nodesTmp2);
+            this.$.graph.nodesChanged();
+
+            // item-listの表示が崩れるので保存して再読み込み
+            // this.saveProject();
+            // reloadProject(this.$.projectList.selected);
+            break;
+          case "link":
+            var linkIndex = -1;
+            var n = this.links.length;
+            for (var i = 0; i < n; i++) {
+              var link = this.links[i];
+              if (data.source.index == link.source.index
+                  && data.target.index == link.target.index) {
+                linkIndex = i;
+              }
+            }
+
+            var linksTmp1 = this.links.slice(0, linkIndex);
+            var linksTmp2 = this.links.slice(linkIndex + 1, this.links.length);
+
+            Array.prototype.splice.call(this.links, 0, n);
+            this.$.graph.nodesChanged();
+
+            Array.prototype.push.apply(this.links, linksTmp1);
+            Array.prototype.push.apply(this.links, linksTmp2);
+            this.$.graph.nodesChanged();
+
+            // item-listの表示が崩れるので保存して再読み込み
+            // this.saveProject();
+            // reloadProject(this.$.projectList.selected);
+            break;
+          default:
+            break;
+        }
+
+      },
+      showInputDialog: function(e) {
+        this.$.dialog.toggle();
+      },
+      localStorageLoad: function(e) {
+
+        if (Array.isArray(this.projectNames)) {
+          if (this.projectNames.length > 0) {
+
+            this.showProjectList = true;
+
+            var projectName = getValueFromParams("project");
+            if (this.projectNames.indexOf(projectName) >= 0) {
+              this.$.projectList.selected = projectName;
+              this.projectActivated();
+            }
+          }
+        } else {
+          this.projectNames = [];
+        }
+
+      },
+      selectedNodeChanged: function(oldValue, newValue) {
+        this.selectedItem = {
+          type: "node",
+          data: newValue,
+        };
+      },
+      selectedLinkChanged: function(oldValue, newValue) {
+        this.selectedItem = {
+          type: "link",
+          data: newValue,
+        };
+      },
+      selectedItemChanged: function() {
+        console.log("type = " + this.selectedItem.type + " in application");
+        if (this.selectedItem.type == "node") {
+          this.selectedNode = this.selectedItem.data;
+        } else if (this.selectedItem.type == "link") {
+          this.selectedLink = this.selectedItem.data;
+        }
+      },
+      isUndefined: function(o) {
+        return typeof(o) == "undefined";
+      },
+      projectNamesChanged: function(newValue, oldValue) {
+
+        this.showProjectList =  this.projectNames.length > 0 ? true : false;
+
+      },
+      addProject: function(e) {
+        var projectName = e.detail;
+        console.log("add new project named " + projectName);
+        this.projectNames.push(projectName);
+        this.$.projectList.selected = projectName;
+        this.$.dialog.toggle();
+      },
+      saveProject: function() {
+        var projectName = this.$.projectList.selected;
+        console.log("save " + projectName + " project to localStorage");
+        var data = parseData(this.nodes, this.links);
+        saveProjectToLocalStorage(projectName, data);
+      },
+      projectActivated: function(e) {
+
+        var nodeLength = this.nodes.length;
+        Array.prototype.splice.call(this.nodes, 0, nodeLength);
+        var linkLength = this.links.length;
+        Array.prototype.splice.call(this.links, 0, linkLength);
+        this.$.graph.nodesChanged();
+
+        var projectName = this.$.projectList.selected;
+        console.log("activate " + projectName + " project");
+        var data = JSON.parse(localStorage.getItem(projectName));
+
+        if (data != null) {
+          Array.prototype.push.apply(this.nodes, data.nodes);
+          Array.prototype.push.apply(this.links, data.links);
+        }
+
+      },
+
+      searchButton: function() {
+        showToast(this.$.toast, "comming soon");
+      },
+    });
+
+    function showToast(el, text) {
+      if (el.opened) {
+        el.dismiss();
+      }
+      el.text = text;
+      el.show();
+    }
+
+    function parseData(nodesOrigin, linksOrigin) {
+      var nodes = [],
+        links = [],
+        nodesLength = nodesOrigin.length,
+        linksLength = linksOrigin.length,
+        i = 0;
+
+      for (i = 0; i < nodesLength; i++) {
+        var nodeOrigin = nodesOrigin[i];
+        var node = {
+          group: nodeOrigin.group,
+          title: nodeOrigin.title,
+          authos: nodeOrigin.authos,
+          journal: nodeOrigin.journal,
+          year: nodeOrigin.year,
+          abstract: nodeOrigin.abstract,
+          url: nodeOrigin.url,
+          memo: nodeOrigin.memo,
+        };
+        nodes.push(node);
+      }
+
+      for (var i = 0; i < linksLength; i++) {
+        var linkOrigin = linksOrigin[i];
+        var link = {
+          source: linkOrigin.source.index,
+          target: linkOrigin.target.index,
+          memo: linkOrigin.memo,
+        };
+        links.push(link);
+      }
+
+      var data = {
+        nodes: nodes,
+        links: links,
+      };
+      return data;
+    }
+
+    function initProject(projectName) {
+      var data = {
+        nodes: [],
+        links: [],
+      };
+      saveProjectToLocalStorage(projectName, data);
+    }
+
+    function saveProjectToLocalStorage(projectName, data) {
+
+      localStorage.setItem(projectName, JSON.stringify(data));
+
+    }
+
+    function reloadProject(projectName) {
+      var protocol = location.protocol;
+      var host = location.host;
+      var pathname = location.pathname;
+      location.href = protocol + "//" + host + pathname + "?project=" + projectName;
+    }
+
+    function getValueFromParams(val) {
+      var result = null,
+        tmp = [];
+      var items = location.search.substr(1).split("&");
+      for (var index = 0; index < items.length; index++) {
+          tmp = items[index].split("=");
+          if (tmp[0] === val) result = decodeURIComponent(tmp[1]);
+      }
+      return result;
+    }
+  </script>
+</polymer-element>
