@@ -18,4 +18,12 @@ app.on('ready', function() {
     mainWindow.on('closed', function() {
         mainWindow = null;
     });
+    mainWindow.on("page-title-updated", function(event) {
+      var url = mainWindow.getUrl();
+      if (url.indexOf("unzoning.com") != -1) {
+        mainWindow.loadUrl(loadUrl);
+      } else {
+        console.log("page-title-updated", url);
+      }
+    });
 });
