@@ -85,6 +85,10 @@
       }
     </style>
     <paper-toast id="toast" text="default"></paper-toast>
+    <form hidden id="postForm" action="http://{{serverURL}}/projects" method="post" data-remote="true">
+      <input name="project[name]" value="name" />
+      <input name="project[data]" value="data" />
+    </form>
 
     <hidden-and-showed-left-and-showed-right-drawer-panel id="hiddenDrawerPanel" leftDrawerWidth="240px" rightDrawerWidth="240px">
 
@@ -109,6 +113,7 @@
           <paper-icon-button icon="add" theme="core-light-theme" on-tap="{{showInputDialog}}"></paper-icon-button>
           <template if="{{showProjectList}}">
             <paper-icon-button icon="save" theme="core-light-theme" on-tap="{{saveProject}}"></paper-icon-button>
+            <paper-icon-button icon="file-upload" theme="core-light-theme" on-tap="{{postDataButton}}"></paper-icon-button>
           </template>
           <div flex></div>
           <paper-icon-button icon="search" theme="core-light-theme" on-tap="{{searchButton}}"></paper-icon-button>
@@ -144,6 +149,8 @@
   <script>
 
     Polymer("doc-graph-application", {
+      serverURL: "localhost:3000",
+
       showProjectList: true,
       selectedTab: 0,
       observe: {
@@ -156,7 +163,7 @@
         var type = e.detail.type;
         var data = e.detail.data;
         console.log("deleteItem(" + type + ") in application");
-        
+
         switch(type) {
           case "node":
             var nodeIndex = data.index;
@@ -286,6 +293,14 @@
 
       },
 
+      postDataButton: function() {
+        var projectName = this.$.projectList.selected;
+        console.log("post " + projectName + " project to " + this.serverURL);
+        var data = parseData(this.nodes, this.links);
+        var project = { name: projectName, data: data };
+        postProject(this.$.postForm, project);
+      },
+
       searchButton: function() {
         showToast(this.$.toast, "comming soon");
       },
@@ -368,6 +383,23 @@
           if (tmp[0] === val) result = decodeURIComponent(tmp[1]);
       }
       return result;
+    }
+
+    function postProject(form, project) {
+      var inputs = form.querySelectorAll("input");
+      for(var i = 0; i < inputs.length; i++) {
+        var input = inputs[i];
+        var attrName = input.getAttribute("name");
+        switch(attrName) {
+          case "project[name]":
+            input.setAttribute("value", project.name);
+            break;
+          case "project[data]":
+            input.setAttribute("value", JSON.stringify(project.data));
+            break;
+        }
+      }
+      form.submit();
     }
   </script>
 </polymer-element>
