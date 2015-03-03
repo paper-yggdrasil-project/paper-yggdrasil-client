@@ -8,6 +8,7 @@ gulp.task('darwin', function () {
       productName: 'PaperTreeProject',
       productVersion: '0.1.0',
       platform: 'darwin',
+      darwinIcon: 'images/PaperTreeProject.icns'
     }))
     .pipe(atomshell.zfsdest('paper_tree_client_darwin.zip'));
 });
@@ -19,6 +20,7 @@ gulp.task('win32', function () {
       productName: 'PaperTreeProject',
       productVersion: '0.1.0',
       platform: 'win32',
+      winIcon: 'images/PaperTreeProject.ico'
     }))
     .pipe(atomshell.zfsdest('paper_tree_client_win32.zip'));
 });
