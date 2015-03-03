@@ -1,6 +1,9 @@
 #log
 *.log
 
+#zip
+*.zip
+
 # gulp-atom
 cache/
 release/
