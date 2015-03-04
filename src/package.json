@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "config": "^1.12.0",
     "github-oauth": "^0.2.1"
   }
 }

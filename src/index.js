@@ -32,13 +32,15 @@ app.on('ready', function() {
 
 ipc.on('auth', function(event, arg) {
 
+  var githubConfig = require('config').get("github");
+
   switch(arg) {
     case 'github':
       var port = 3031;
 
       var githubOAuth = require('github-oauth')({
-        githubClient: '2afc6a766bc86ca6ea3a',
-        githubSecret: '75dc249ceccf2403f8155b19851b30e93ba2d868',
+        githubClient: githubConfig.client,
+        githubSecret: githubConfig.secret,
         baseURL: 'http://localhost:' + port,
         loginURI: '/login',
         callbackURI: '/callback',
@@ -62,7 +64,6 @@ ipc.on('auth', function(event, arg) {
       githubOAuth.on('token', function(token, serverResponse) {
         console.log('here is your shiny new github oauth token', token);
         serverResponse.end(JSON.stringify(token));
-        token;
         event.sender.send('auth-reply', token);
         oauthWindow.close();
       });
