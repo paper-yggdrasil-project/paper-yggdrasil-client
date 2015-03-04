@@ -16,5 +16,20 @@
 
     <doc-graph-application></doc-graph-application>
 
+    <script>
+      var ipc = require('ipc');
+      ipc.on('auth-reply', function(arg) {
+        if(arg == "error") {
+          console.log("auth error");
+        } else {
+          document.querySelector('doc-graph-application').postDataWithToken(arg);
+        }
+      });
+      document.querySelector('doc-graph-application').addEventListener('auth', function(e) {
+        console.log("start " + e.type + " " + e.detail);
+        ipc.send(e.type, e.detail);
+      });
+    </script>
+
   </body>
 </html>

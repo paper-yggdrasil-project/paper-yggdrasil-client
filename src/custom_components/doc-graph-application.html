@@ -88,6 +88,9 @@
     <form hidden id="postForm" action="http://{{serverURL}}/projects" method="post" data-remote="true">
       <input name="project[name]" value="name" />
       <input name="project[data]" value="data" />
+      <input name="access_token" value="token" />
+      <input name="token_type" value="type" />
+      <input name="scope" value="scope" />
     </form>
 
     <hidden-and-showed-left-and-showed-right-drawer-panel id="hiddenDrawerPanel" leftDrawerWidth="240px" rightDrawerWidth="240px">
@@ -294,11 +297,15 @@
       },
 
       postDataButton: function() {
+        this.fire("auth", "github");
+      },
+      postDataWithToken: function(token) {
+        console.log("postDataWithToken");
         var projectName = this.$.projectList.selected;
         console.log("post " + projectName + " project to " + this.serverURL);
         var data = parseData(this.nodes, this.links);
         var project = { name: projectName, data: data };
-        postProject(this.$.postForm, project);
+        postProject(this.$.postForm, project, token);
       },
 
       searchButton: function() {
@@ -385,7 +392,7 @@
       return result;
     }
 
-    function postProject(form, project) {
+    function postProject(form, project, token) {
       var inputs = form.querySelectorAll("input");
       for(var i = 0; i < inputs.length; i++) {
         var input = inputs[i];
@@ -396,6 +403,15 @@
             break;
           case "project[data]":
             input.setAttribute("value", JSON.stringify(project.data));
+            break;
+          case "access_token":
+            input.setAttribute("value", token.access_token);
+            break;
+          case "token_type":
+            input.setAttribute("value", token.token_type);
+            break;
+          case "scope":
+            input.setAttribute("value", token.scope);
             break;
         }
       }
