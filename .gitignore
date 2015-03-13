@@ -1,6 +1,9 @@
 #log
 *.log
 
+#config
+config/
+
 # gulp-atom
 cache/
 release/
