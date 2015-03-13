@@ -20,14 +20,6 @@ app.on('ready', function() {
     mainWindow.on('closed', function() {
         mainWindow = null;
     });
-    mainWindow.on("page-title-updated", function(event) {
-      var url = mainWindow.getUrl();
-      if (url.indexOf("unzoning.com") != -1) {
-        mainWindow.loadUrl(loadUrl);
-      } else {
-        console.log("page-title-updated", url);
-      }
-    });
 });
 
 ipc.on('auth', function(event, arg) {
@@ -47,14 +39,15 @@ ipc.on('auth', function(event, arg) {
         scope: 'user:email',
       });
 
-      require('http').createServer(function(req, res) {
+      var server = require('http').createServer(function(req, res) {
         if (req.url.match(/login/)) {
           return githubOAuth.login(req, res);
         }
         if (req.url.match(/callback/)) {
           return githubOAuth.callback(req, res);
         }
-      }).listen(port);
+      });
+      server.listen(port);
 
       githubOAuth.on('error', function(err) {
         console.error('there was a login error', err);
@@ -73,9 +66,16 @@ ipc.on('auth', function(event, arg) {
       oauthWindow.loadUrl(loadUrl);
       oauthWindow.on('closed', function() {
           oauthWindow = null;
+          server.close();
       });
       break;
 
   }
 
+});
+
+ipc.on('post-result', function(event, args) {
+  if (oauthWindow != null) {
+    oauthWindow.close();
+  }
 });

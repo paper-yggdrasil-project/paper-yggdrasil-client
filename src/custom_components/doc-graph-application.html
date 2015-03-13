@@ -10,6 +10,7 @@
 <link rel="import" href="../bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="../bower_components/paper-tabs/paper-tab.html">
 <link rel="import" href="../bower_components/core-pages/core-pages.html">
+<link rel="import" href="../bower_components/core-ajax/core-ajax.html">
 
 <link rel="import" href="../custom_components/item-list.html">
 <link rel="import" href="../custom_components/hidden-and-showed-left-and-showed-right-drawer-panel.html">
@@ -85,13 +86,10 @@
       }
     </style>
     <paper-toast id="toast" text="default"></paper-toast>
-    <form hidden id="postForm" action="http://{{serverURL}}/projects" method="post" data-remote="true">
-      <input name="project[name]" value="name" />
-      <input name="project[data]" value="data" />
-      <input name="access_token" value="token" />
-      <input name="token_type" value="type" />
-      <input name="scope" value="scope" />
-    </form>
+    <core-ajax
+      id="coreAjax"
+      url="http://{{serverURL}}/projects.json"
+      on-core-complete="{{handleResponse}}"></core-ajax>
 
     <hidden-and-showed-left-and-showed-right-drawer-panel id="hiddenDrawerPanel" leftDrawerWidth="240px" rightDrawerWidth="240px">
 
@@ -305,7 +303,20 @@
         console.log("post " + projectName + " project to " + this.serverURL);
         var data = parseData(this.nodes, this.links);
         var project = { name: projectName, data: data };
-        postProject(this.$.postForm, project, token);
+        postAjaxProject(this.$.coreAjax, project, token);
+      },
+      handleResponse: function(e) {
+        console.log("handleResponse");
+        var status = e.detail.xhr.status;
+        console.log("status = " + status);
+        var res = JSON.parse(e.detail.xhr.response);
+        console.log("success = " + res.success)
+        this.fire("post-result", res.success);
+        if (res.success) {
+          showToast(this.$.toast, 'project successfully created!');
+        } else {
+          showToast(this.$.toast, 'something with wrong!');
+        }
       },
 
       searchButton: function() {
@@ -392,30 +403,19 @@
       return result;
     }
 
-    function postProject(form, project, token) {
-      var inputs = form.querySelectorAll("input");
-      for(var i = 0; i < inputs.length; i++) {
-        var input = inputs[i];
-        var attrName = input.getAttribute("name");
-        switch(attrName) {
-          case "project[name]":
-            input.setAttribute("value", project.name);
-            break;
-          case "project[data]":
-            input.setAttribute("value", JSON.stringify(project.data));
-            break;
-          case "access_token":
-            input.setAttribute("value", token.access_token);
-            break;
-          case "token_type":
-            input.setAttribute("value", token.token_type);
-            break;
-          case "scope":
-            input.setAttribute("value", token.scope);
-            break;
-        }
-      }
-      form.submit();
+    function postAjaxProject(ajax, project, token) {
+      var params = {};
+      params['access_token'] = token.access_token;
+      params['token_type'] = token.token_type;
+      params['scope'] = token.scope;
+      params['project'] = JSON.stringify(project);
+
+      ajax.method = 'POST';
+      ajax.handleAs = 'text';
+      ajax.contentType = 'application/json';
+      ajax.body = JSON.stringify(params);
+      ajax.go();
     }
+
   </script>
 </polymer-element>
