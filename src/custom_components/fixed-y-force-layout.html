@@ -4,7 +4,7 @@
 <script type="text/javascript" src="../bower_components/d3-tip/index.js"></script>
 
 <polymer-element name="fixed-y-force-layout">
-	
+
   <template>
     <style>
       :host {
@@ -55,7 +55,7 @@
       maxYear: 2015,
       stage: null,
       force: null,
-      
+
       handing: false,
       handedNode: null,
       handedLink: null,
@@ -154,7 +154,7 @@
           .text(el.minYear + i + 1)
           .style("fill", "gray");
       }
-      
+
       el.force = d3.layout.force()
         .nodes(el.nodes)
         .links(el.links)
@@ -163,7 +163,7 @@
         .size([el.width, el.height]);
 
     }
-    
+
     function update(el) {
       console.log("updating...");
 
@@ -222,7 +222,7 @@
             refferedNodes.push(refferedNode);
           }
           console.log(JSON.stringify(refferedNodes));
-          
+
         })
         .call(el.force.drag);
 
@@ -243,7 +243,7 @@
 
       nodeGroup.exit().remove();
 
-      
+
       var link = el.stage.selectAll(".link")
         .data(el.links, function(l) {
           // ひとまず自動付加のindexとindexの組をキーに。
@@ -269,7 +269,7 @@
           } else {
             el.selectedLink = d;
           }
-        }); 
+        });
 
       link.exit().remove();
 
@@ -277,7 +277,7 @@
           .data(["suit", "licensing", "resolved"])
         .enter().append("marker")
           .attr("id", function(d) { return d; })
-          .attr("viewBox", "0 -5 10 10")
+          .attr("viewBox", "0 -5 10 14")
           .attr("refX", 25)
           .attr("refY", 0)
           .attr("markerWidth", 2)
@@ -286,11 +286,11 @@
         .append("path")
           .attr("d", "M0,-5L10,0L0,5 L10,0 L0, -5")
           .style("stroke", "#4679BD")
-          .style("stroke-width", 4)
+          .style("stroke-width", 3)
           .style("opacity", "0.6");
 
 
-      
+
 
       function yByYear(d) {
         if (typeof(d.year) !== "undefined") {
@@ -303,9 +303,9 @@
           return el.height - el.margin;
         }
       }
-      
+
       el.force.on("tick", function() {
-        
+
         link.attr("x1", function(d) { return d.source.x; })
           .attr("y1", function(d) { return yByYear(d.source); })
           .attr("x2", function(d) { return d.target.x; })
@@ -402,7 +402,7 @@
       console.log("select function (type:" + type + ")");
 
       if (type == "node") {
-        
+
         el.stage.selectAll(".node")
           .classed("active", function(n) {
             return n.index == item.index;
