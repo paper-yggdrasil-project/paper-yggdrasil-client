@@ -44,7 +44,6 @@
 
     </style>
     <div id="container">
-      <paper-icon-button icon="close" on-tap="{{deleteLink}}"></paper-icon-button>
       <div id="yearContainer">
         <div horizontal center-justified layout>
           <span class="radius"><content select="year"></content></span>
@@ -55,6 +54,7 @@
         <div horizontal center-justified layout>↓</div>
         <div><content select="refered-title"></div>
       </div>
+      <paper-icon-button icon="close" on-tap="{{deleteLink}}"></paper-icon-button>
     </div>
   </template>
   <script>
