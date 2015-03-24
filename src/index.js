@@ -24,15 +24,15 @@ app.on('ready', function() {
 
 ipc.on('auth', function(event, arg) {
 
-  var githubConfig = require('config').get("github");
+  var config = require('config-path')(__dirname + "/config/default.yml");
 
   switch(arg) {
     case 'github':
       var port = 3031;
 
       var githubOAuth = require('github-oauth')({
-        githubClient: githubConfig.client,
-        githubSecret: githubConfig.secret,
+        githubClient: config.github.client,
+        githubSecret: config.github.secret,
         baseURL: 'http://localhost:' + port,
         loginURI: '/login',
         callbackURI: '/callback',

@@ -18,6 +18,5 @@ node_modules/
 src/node_modules/
 src/bower_components/
 
-
 # MacOSX
 .DS_Store
