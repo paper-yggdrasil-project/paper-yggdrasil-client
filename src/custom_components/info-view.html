@@ -65,13 +65,13 @@
         color: #37474F; /*800(bluegray)*/
       }
 
-      paper-slider::shadow #sliderBar::shadow #activeProgress {
+      paper-slider#slider::shadow #sliderBar::shadow #activeProgress {
         background-color: {{sliderColor}};
       }
-      paper-slider::shadow #sliderKnobInner {
+      paper-slider#slider::shadow #sliderKnobInner {
         background-color: {{sliderColor}};
       }
-      paper-slider::shadow #sliderKnobInner::before {
+      paper-slider#slider::shadow #sliderKnobInner::before {
         background-color: {{sliderColor}};
       }
     </style>
@@ -104,9 +104,8 @@
             <input is="core-input" required value="{{viewedNode.journal}}">
           </paper-input-decorator>
 
-          <paper-input-decorator label="Year" class="custom" floatingLabel>
-            <input is="core-input" required value="{{viewedNode.year}}">
-          </paper-input-decorator>
+          <!-- <div>Year</div> -->
+          <paper-slider id="year-slider"  pin min="1950" max="2016" value="{{viewedNode.year}}" editable></paper-slider>
 
           <paper-input-decorator label="Abstarct" class="custom" floatingLabel>
             <paper-autogrow-textarea>
@@ -159,7 +158,7 @@
         </section>
       <core-pages>
     </div>
-    
+
   </template>
   <script>
     Polymer("info-view", {
@@ -193,7 +192,7 @@
       selectedItemChanged: function() {
         console.log("selectedItemChanged of info-view");
         this.selectedType = this.selectedItem.type;
-        
+
         if (this.selectedItem.type == "node") {
           this.viewedNode = this.selectedItem.data;
         } else if (this.selectedItem.type == "link") {

@@ -16,5 +16,28 @@
 
     <doc-graph-application></doc-graph-application>
 
+    <script>
+    try {
+      var ipc = require('ipc');
+      ipc.on('auth-reply', function(arg) {
+        if(arg == "error") {
+          console.log("auth error");
+        } else {
+          document.querySelector('doc-graph-application').postDataWithToken(arg);
+        }
+      });
+      document.querySelector('doc-graph-application').addEventListener('auth', function(e) {
+        console.log("start " + e.type + " " + e.detail);
+        ipc.send(e.type, e.detail);
+      });
+      document.querySelector('doc-graph-application').addEventListener('post-result', function(e) {
+        console.log("post result is" + e.detail);
+        ipc.send(e.type, e.detail);
+      });
+    } catch (e) {
+      console.log(e);
+    }
+    </script>
+
   </body>
 </html>

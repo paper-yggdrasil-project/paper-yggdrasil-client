@@ -22,6 +22,7 @@
     }
     #container:hover paper-icon-button {
       display: block;
+      background-color:rgba(236,239,241,0.6);
     }
     #yearContainer {
       position: absolute;
@@ -34,6 +35,7 @@
       padding-right: 9px;
       border: 2px solid #78909C;
       border-radius: 12px;
+      background-color:rgba(236,239,241,0.6);
     }
     #content {
       padding: 18px;
@@ -42,7 +44,6 @@
 
     </style>
     <div id="container">
-      <paper-icon-button icon="close" on-tap="{{deleteLink}}"></paper-icon-button>
       <div id="yearContainer">
         <div horizontal center-justified layout>
           <span class="radius"><content select="year"></content></span>
@@ -53,6 +54,7 @@
         <div horizontal center-justified layout>↓</div>
         <div><content select="refered-title"></div>
       </div>
+      <paper-icon-button icon="close" on-tap="{{deleteLink}}"></paper-icon-button>
     </div>
   </template>
   <script>
