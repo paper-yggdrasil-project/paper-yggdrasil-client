@@ -1,38 +1,39 @@
 var gulp = require('gulp');
-var coffee = require('gulp-coffee');
-var concat = require('gulp-concat');
-var uglify = require('gulp-uglify');
-var sourcemaps = require('gulp-sourcemaps');
-var gulpAtom = require('gulp-atom');
+var atomshell = require('gulp-atom-shell');
 
-var paths = {
-  scripts: 'src/js/**/*.coffee'
-};
-
-gulp.task('atom', function() {
-    return gulpAtom({
-      srcPath: './src',
-      releasePath: './release',
-      cachePath: './cache',
-      version: 'v0.20.7',
-      rebuild: false,
-      platforms: ['win32-ia32', 'darwin-x64', 'linux-x64']
-    });
+gulp.task('darwin', function () {
+  return gulp.src('src/**')
+    .pipe(atomshell({
+      version: '0.20.7',
+      productName: 'PaperTreeProject',
+      productVersion: '0.1.0',
+      platform: 'darwin',
+      darwinIcon: 'images/PaperTreeProject.icns'
+    }))
+    .pipe(atomshell.zfsdest('paper_tree_client_darwin.zip'));
 });
 
-gulp.task('coffee', function() {
-  // Minify and copy all JavaScript (except vendor scripts)
-  // with sourcemaps all the way down
-  return gulp.src(paths.scripts)
-    .pipe(sourcemaps.init())
-      .pipe(coffee())
-      // .pipe(uglify())
-      // .pipe(concat('all.min.js'))
-    .pipe(sourcemaps.write())
-    .pipe(gulp.dest('src/dest/js'));
+gulp.task('win32', function () {
+  return gulp.src('src/**')
+    .pipe(atomshell({
+      version: '0.20.7',
+      productName: 'PaperTreeProject',
+      productVersion: '0.1.0',
+      platform: 'win32',
+      winIcon: 'images/PaperTreeProject.ico'
+    }))
+    .pipe(atomshell.zfsdest('paper_tree_client_win32.zip'));
 });
 
-// Rerun the task when a file changes
-gulp.task('watch', function() {
-  gulp.watch(paths.scripts, ['coffee']);
+gulp.task('linux', function () {
+  return gulp.src('src/**')
+    .pipe(atomshell({
+      version: '0.20.7',
+      productName: 'PaperTreeProject',
+      productVersion: '0.1.0',
+      platform: 'linux',
+    }))
+    .pipe(atomshell.zfsdest('paper_tree_client_linux.zip'));
 });
+
+gulp.task('default', ['darwin', 'win32', 'linux']);

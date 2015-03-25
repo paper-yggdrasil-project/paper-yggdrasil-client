@@ -2,15 +2,42 @@
   <head>
     <title>GitHub Oauth</title>
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+    <script src="./bower_components/webcomponentsjs/webcomponents.js"></script>
+    <link rel="import" href="./bower_components/paper-progress/paper-progress.html">
     <style>
-      html,body {
+      html , body {
+        width: 100%;
         height: 100%;
-        margin: 0;
-        background-color: #E5E5E5;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+        margin:0;
+        padding:0 0;
+      }
+      body {
+        background: #fff;
+      }
+      .center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      paper-progress {
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
       }
     </style>
   </head>
   <body>
+    <div class="center">
+      <img width="120" src="./image/PaperTreeProject.png">
+      <img width="120" src="./image/hand_arrow.jpg">
+      <img width="120" src="./image/github-logo-transparent.jpg">
+    </div>
+    <paper-progress indeterminate></paper-progress>
     <script>
       location.href = "http://localhost:3031/login";
     </script>
